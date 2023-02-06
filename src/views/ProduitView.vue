@@ -2,42 +2,44 @@
     <main>
         <div>
             <!-- Un formulaire pour saisir les valeurs de la catégorie à ajouter -->
-            <form @submit.prevent="ajouteCategorie">
+            <form @submit.prevent="ajouteProduit">
                 <div>
-                    <input id="libelle" v-model="data.formulaireCategorie.libelle" placeholder="Libelle" />
+                    <input id="libelle" v-model="data.formulaireProduit.libelle" placeholder="Libelle" />
                 </div>
                 <div>
-                    <input id="description" v-model="data.formulaireCategorie.description" placeholder="Description" />
+                    <input id="description" v-model="data.formulaireProduit.description" placeholder="Description" />
                 </div>
                 <button type="submit">Ajouter</button>
             </form>
         </div>
         <div>
             <table>
-                <caption>Liste des catégories {{ data.numeroPage }} / {{ data.pageMax }}</caption>
+                <caption>Liste des produits {{ data.numeroPage }} / {{ data.pageMax }}</caption>
                 <tr>
-                    <th>Code</th>
-                    <th>Libelle</th>
-                    <th>Description</th>
+                    <th>Nom</th>
+                    <th>Prix</th>
+                    <th>Stock</th>
+                    <th>Commandés</th>
                     <th>Action</th>
                 </tr>
                 <!-- Si le tableau des catégories est vide -->
-                <tr v-if="!data.listeCategories">
-                    <td colspan="4">Veuillez patienter, chargement des catégories...</td>
+                <tr v-if="!data.listeProduits">
+                    <td colspan="4">Veuillez patienter, chargement des produits...</td>
                 </tr>
                 <!-- Si le tableau des catégories n'est pas vide -->
-                <tr v-for="categorie in data.listeCategories" :key="categorie.code">
-                    <td>{{ categorie.code }}</td>
-                    <td>{{ categorie.libelle }}</td>
-                    <td>{{ categorie.description }}</td>
+                <tr v-for="produit in data.listeProduits" :key="produit.code">
+                    <td>{{ produit.nom }}</td>
+                    <td>{{ produit.prixUnitaire }}</td>
+                    <td>{{ produit.unitesEnStock }}</td>
+                    <td>{{ produit.unitesCommandees }}</td>
                     <td>
-                        <button @click="deleteEntity(categorie._links.self.href)">
+                        <button @click="deleteEntity(produit._links.self.href)">
                             Supprimer
                         </button>
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="4">
+                    <td colspan="5">
                         <button @click="changePage('begin')"><img src="../img/keyboard_double_arrow_left_FILL0_wght400_GRAD0_opsz48.png"/></button>
                         <button @click="changePage(-1)"><img src="../img/arrow_back_FILL0_wght400_GRAD0_opsz48.png"/></button>
                         <button @click="changePage(1)"><img src="../img/arrow_forward_FILL0_wght400_GRAD0_opsz48.png"></button>
@@ -54,16 +56,16 @@ import { reactive, onMounted } from "vue";
 import { BACKEND, doAjaxRequest } from "../api";
 
 // Pour réinitialiser le formuaire
-const categorieVide = {
-    libelle: "",
-    description: ""
+const produitVide = {
+    reference: "",
+    nom: ""
 };
 
 let data = reactive({
     // Les données saisies dans le formulaire
-    formulaireCategorie: { ...categorieVide },
+    formulaireProduit: { ...produitVide },
     // La liste des catégories affichée sous forme de table
-    listeCategories: [],
+    listeProduits: [],
     numeroPage: 0,
     pageMax: 0
 });
@@ -71,47 +73,47 @@ let data = reactive({
 function changePage(page) {
     if(page === 'begin'){
         data.numeroPage = 0;
-        chargeCategories();
+        chargeProduits();
     }
     else if(page == 'last'){
         data.numeroPage = data.pageMax;
-        chargeCategories();
+        chargeProduits();
     }
     if(data.numeroPage + page >= 0 && data.numeroPage + page <= data.pageMax){
         if(data.numeroPage <= data.pageMax && data.numeroPage >= 0){
             data.numeroPage = data.numeroPage + page;
-            chargeCategories();
+            chargeProduits();
         }
     }
 }
 
-function chargeCategories() {
+function chargeProduits() {
     // Appel à l'API pour avoir la liste des catégories
     // Trié par code, descendant
     // Verbe HTTP GET par défaut
-    doAjaxRequest(BACKEND + "/api/categories?page="+ data.numeroPage + "&size="+ 5 + "&sort=code")
+    doAjaxRequest(BACKEND + "/api/produits?page="+ data.numeroPage + "&size="+ 5 + "&sort=code")
         .then((json) => {
-            data.listeCategories = json._embedded.categories;
+            data.listeProduits = json._embedded.produits;
             data.pageMax = json.page.totalPages;
         })
         .catch((error) => alert(error.message));
 }
 
-function ajouteCategorie() {
+function ajouteProduit() {
     // Ajouter une catégorie avec les données du formulaire
     const options = {
         method: "POST", // Verbe HTTP POST pour ajouter un enregistrement
-        body: JSON.stringify(data.formulaireCategorie),
+        body: JSON.stringify(data.formulaireProduit),
         headers: {
             "Content-Type": "application/json",
         },
     };
-    doAjaxRequest(BACKEND + "/api/categories", options)
+    doAjaxRequest(BACKEND + "/api/produits", options)
         .then(() => {
             // Réinitialiser le formulaire
-            data.formulaireCategorie = { ...categorieVide };
+            data.formulaireProduit = { ...produitVide };
             // Recharger la liste des catégories
-            chargeCategories();
+            chargeProduits();
         })
         .catch((error) => alert(error.message));
 }
@@ -121,12 +123,12 @@ function ajouteCategorie() {
  */
 function deleteEntity(entityRef) {
     doAjaxRequest(entityRef, { method: "DELETE" })
-        .then(chargeCategories)
+        .then(chargeProduits)
         .catch((error) => alert(error.message));
 }
 
 // A l'affichage du composant, on affiche la liste
-onMounted(chargeCategories);
+onMounted(chargeProduits);
 
 </script>
 
