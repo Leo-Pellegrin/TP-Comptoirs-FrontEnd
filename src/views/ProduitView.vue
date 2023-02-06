@@ -94,7 +94,7 @@ function chargeProduits() {
     doAjaxRequest(BACKEND + "/api/produits?page="+ data.numeroPage + "&size="+ 5 + "&sort=code")
         .then((json) => {
             data.listeProduits = json._embedded.produits;
-            data.pageMax = json.page.totalPages;
+            data.pageMax = json.page.totalPages -1;
         })
         .catch((error) => alert(error.message));
 }

@@ -92,7 +92,7 @@ function chargeCategories() {
     doAjaxRequest(BACKEND + "/api/categories?page="+ data.numeroPage + "&size="+ 5 + "&sort=code")
         .then((json) => {
             data.listeCategories = json._embedded.categories;
-            data.pageMax = json.page.totalPages;
+            data.pageMax = json.page.totalPages -1;
         })
         .catch((error) => alert(error.message));
 }
